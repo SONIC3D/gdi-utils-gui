@@ -1,0 +1,17 @@
+{
+  "name": "gdi-utils-gui",
+  "version": "1.0.0",
+  "description": "Dreamcast GDI disc image utilities GUI",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p ./tsconfig.json",
+    "start": "electron bin"
+  },
+  "author": "SONIC3D",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^1.8.2",
+    "typescript": "^2.7.2"
+  }
+}
