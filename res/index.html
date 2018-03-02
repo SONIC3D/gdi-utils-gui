@@ -1,15 +1,25 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
-    <title>Hello World!</title>
+      <meta charset="UTF-8">
+      <title>Gdi-Utilities GUI by SONIC3D</title>
   </head>
   <body>
-    <h1>Hello World!</h1>
+    <h1>Redump GDI to General GDI converter</h1>
     <!-- All of the Node.js APIs are available in this renderer process. -->
-    We are using Node.js <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
+    <!--We are using Node.js <script>document.write(process.versions.node)</script>,-->
+    <!--Chromium <script>document.write(process.versions.chrome)</script>,-->
+    <!--and Electron <script>document.write(process.versions.electron)</script>.-->
+
+    <p>
+        <label for="txt-gdiSrcFilePath">Input GDI File: </label><br><input id = "txt-gdiSrcFilePath" type="text">
+        <button id = "btn-browseGdiSrc"> Browse </button>
+        <br>
+        <label for="txt-gdiDstDir">Output GDI Directory: </label><br><input id = "txt-gdiDstDir" type="text">
+        <button id = "btn-browseGdiDstDir"> Browse </button>
+        <br><br>
+        <button id = "btn-startJob-single"> Start </button>
+    </p>
 
     <script>
       // You can also require other files to run in this process
