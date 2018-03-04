@@ -72,7 +72,7 @@ module app {
                     let argc: number = argv.length;
                     console.log(`ipcMain on event startJob-single, argc: ${argv.length}, args: ${argv}`);
 
-                    if (argc != 2) {
+                    if ((argc != 2) || (argv[0].trim().length == 0) || (argv[1].trim().length == 0)) {
                         // Parameters error.
                         evt.sender.send('log-addLine-Error', 'Gdi image source file path and output directory are both required.');
                     } else {

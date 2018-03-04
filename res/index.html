@@ -12,13 +12,17 @@
     <!--and Electron <script>document.write(process.versions.electron)</script>.-->
 
     <p>
-        <label for="txt-gdiSrcFilePath">Input GDI File: </label><br><input id = "txt-gdiSrcFilePath" type="text">
+        <label for="txt-gdiSrcFilePath">Input GDI File: </label><br><input id = "txt-gdiSrcFilePath" type="text" size="60">
         <button id = "btn-browseGdiSrc"> Browse </button>
         <br>
-        <label for="txt-gdiDstDir">Output GDI Directory: </label><br><input id = "txt-gdiDstDir" type="text">
+        <label for="txt-gdiDstDir">Output GDI Directory: </label><br><input id = "txt-gdiDstDir" type="text" size="60">
         <button id = "btn-browseGdiDstDir"> Browse </button>
         <br><br>
         <button id = "btn-startJob-single"> Start </button>
+        <br><br><br>
+        <label for="txtarea-logMain">Log info:   </label><button id = "btn-logClear"> Clear Log </button>
+        <br>
+        <textarea id = "txtarea-logMain" cols="80" rows="15" readonly></textarea>
     </p>
 
     <script>

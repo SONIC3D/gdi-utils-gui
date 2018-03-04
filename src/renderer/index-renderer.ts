@@ -21,6 +21,8 @@ module appRenderer {
         protected m_btnBrowseGdiDstDir: HTMLButtonElement;
         protected m_txtGdiDstDir: HTMLInputElement;
         protected m_btnStartJobSingle: HTMLButtonElement;
+        protected m_txtareaLogMain: HTMLTextAreaElement;
+        protected m_btnLogClear: HTMLButtonElement;
 
         constructor() {
             this.m_btnBrowseGdiSrc = document.getElementById("btn-browseGdiSrc") as HTMLButtonElement;
@@ -31,6 +33,10 @@ module appRenderer {
             this._initEvtBindingBtnBrowseGdiDst();
             this.m_btnStartJobSingle = document.getElementById("btn-startJob-single") as HTMLButtonElement;
             this._initEvtBindingBtnStartJobSingle();
+            this.m_btnLogClear = document.getElementById("btn-logClear") as HTMLButtonElement;
+            this._initEvtBindingBtnLogClear();
+            this.m_txtareaLogMain = document.getElementById("txtarea-logMain") as HTMLTextAreaElement;
+            this._initEvtForIpc_LogAddLine();
         }
 
         private _initEvtBindingBtnBrowseGdiSrc(): void {
@@ -87,6 +93,32 @@ module appRenderer {
             }
         }
 
+        private _initEvtBindingBtnLogClear(): void {
+            let btnTarget = this.m_btnLogClear;
+
+            if (btnTarget) {
+                btnTarget.addEventListener("click", (evt: Event) => {
+                    console.log(`Button ${btnTarget.id} event ${evt.type} occurred.`);
+                    this.logClear();
+                });
+            }
+        }
+
+        private _initEvtForIpc_LogAddLine(): void {
+            let ipcRenderer = IndexRenderer.s_ipcRenderer;
+
+            if (ipcRenderer) {
+                ipcRenderer.on('log-addLine-Error', (evt: electron.Event, ...argv: any[]) => {
+                    let argc: number = argv.length;
+                    console.log(`ipcRender on event log-addLine-Error, argc: ${argv.length}, args: ${argv}`);
+
+                    if (argc > 0) {
+                        this.logAddLine(argv[0]);
+                    }
+                });
+            }
+        }
+
         protected getInputBoxGdiSrcFilePath(): string {
             let ret: string = "{failed to get}";
             let txtBox = this.m_txtGdiSrcFilePath;
@@ -116,6 +148,18 @@ module appRenderer {
             let txtBox = this.m_txtGdiDstDir;
             if (txtBox) {
                 txtBox.value = filePath;
+            }
+        }
+
+        protected logClear(): void {
+            if (this.m_txtareaLogMain) {
+                this.m_txtareaLogMain.value = "";
+            }
+        }
+
+        protected logAddLine(msg: string): void {
+            if (this.m_txtareaLogMain) {
+                this.m_txtareaLogMain.value = `${this.m_txtareaLogMain.value}${msg}\n`;
             }
         }
     }
