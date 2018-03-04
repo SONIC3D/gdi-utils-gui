@@ -12,17 +12,13 @@ import * as electron from "electron";
 import * as path from "path";
 import * as url from "url";
 
-// Module to control application life.
-let electronApp = electron.app;
-
-// Module to create native browser window.
-let BrowserWindow = electron.BrowserWindow;
-
-
 module app {
     // Program Entry Class
     export class MainEntry {
         public static CONFIG__PATH__ENTRY_PAGE_FILE: string = 'res/index.html';
+
+        protected static s_app = electron.app;
+        protected static s_ipcMain = electron.ipcMain;
 
         public static create(): MainEntry {
             let retVal: MainEntry = new MainEntry();
@@ -34,6 +30,16 @@ module app {
         protected m_mainWindow: Electron.BrowserWindow;
 
         constructor() {
+            this._initEventsForAppWindow();
+            this._initEventsForIpc();
+
+            // console.log("MainEntry created!");
+        }
+
+        private _initEventsForAppWindow(): void {
+            // Module to control application life.
+            let electronApp = MainEntry.s_app;
+
             // This method will be called when Electron has finished
             // initialization and is ready to create browser windows.
             // Some APIs can only be used after this event occurs.
@@ -57,13 +63,30 @@ module app {
                     this.createWindow();
                 }
             });
+        }
 
-            // console.log("MainEntry created!");
+        private _initEventsForIpc(): void {
+            let ipcMain = MainEntry.s_ipcMain;
+            if (ipcMain) {
+                ipcMain.on('startJob-single', (evt: electron.Event, ...argv: any[]) => {
+                    let argc: number = argv.length;
+                    console.log(`ipcMain on event startJob-single, argc: ${argv.length}, args: ${argv}`);
+
+                    if (argc != 2) {
+                        // Parameters error.
+                        evt.sender.send('log-addLine-Error', 'Gdi image source file path and output directory are both required.');
+                    } else {
+                        let srcFilePath: string = argv[0];
+                        let dstDir: string = argv[1];
+                        // TODO: Integrate gdi-utils lib to invoke its conversion API here with the user provided file paths.
+                    }
+                });
+            }
         }
 
         protected createWindow(): void {
             // Create the browser window.
-            this.m_mainWindow = new BrowserWindow({width: 800, height: 600});
+            this.m_mainWindow = new electron.BrowserWindow({width: 800, height: 600});
 
             // and load the index.html of the app.
             this.m_mainWindow.loadURL(url.format({
@@ -87,7 +110,7 @@ module app {
 }
 
 // Program entry code
-let instance = app.MainEntry.create();
-if (!instance) {
+let appInstance = app.MainEntry.create();
+if (!appInstance) {
     console.log("Fatal Error: Failed to create MainEntry!");
 }

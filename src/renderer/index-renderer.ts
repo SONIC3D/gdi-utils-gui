@@ -45,7 +45,7 @@ module appRenderer {
                     }, (filePaths: string[]) => {
                         if ((filePaths) && (filePaths.length > 0)) {
                             console.log(`FilePaths from OpenDialog: ${filePaths}`);
-                            this.fillInputBoxGdiSrcFilePath(filePaths[0]);
+                            this.setInputBoxGdiSrcFilePath(filePaths[0]);
                         }
                     });
                 });
@@ -64,7 +64,7 @@ module appRenderer {
                     }, (filePaths: string[]) => {
                         if ((filePaths) && (filePaths.length > 0)) {
                             console.log(`FilePaths from OpenDialog: ${filePaths}`);
-                            this.fillInputBoxGdiDstDir(filePaths[0]);
+                            this.setInputBoxGdiDstDir(filePaths[0]);
                         }
                     });
                 });
@@ -72,24 +72,47 @@ module appRenderer {
         }
 
         private _initEvtBindingBtnStartJobSingle(): void {
+            let ipcRenderer = IndexRenderer.s_ipcRenderer;
             let btnTarget = this.m_btnStartJobSingle;
 
             if (btnTarget) {
                 btnTarget.addEventListener("click", (evt: Event) => {
                     console.log(`Button ${btnTarget.id} event ${evt.type} occurred.`);
-                    // TODO: Post path data to main process and start the conversion job.
+
+                    // DONE: Post path data to main process and start the conversion job.
+                    if (ipcRenderer) {
+                        ipcRenderer.send('startJob-single', this.getInputBoxGdiSrcFilePath(), this.getInputBoxGdiDstDir());
+                    }
                 });
             }
         }
 
-        protected fillInputBoxGdiSrcFilePath(filePath: string): void {
+        protected getInputBoxGdiSrcFilePath(): string {
+            let ret: string = "{failed to get}";
+            let txtBox = this.m_txtGdiSrcFilePath;
+            if (txtBox) {
+                ret = txtBox.value;
+            }
+            return ret;
+        }
+
+        protected setInputBoxGdiSrcFilePath(filePath: string): void {
             let txtBox = this.m_txtGdiSrcFilePath;
             if (txtBox) {
                 txtBox.value = filePath;
             }
         }
 
-        protected fillInputBoxGdiDstDir(filePath: string): void {
+        protected getInputBoxGdiDstDir(): string {
+            let ret: string = "{failed to get}";
+            let txtBox = this.m_txtGdiDstDir;
+            if (txtBox) {
+                ret = txtBox.value;
+            }
+            return ret;
+        }
+
+        protected setInputBoxGdiDstDir(filePath: string): void {
             let txtBox = this.m_txtGdiDstDir;
             if (txtBox) {
                 txtBox.value = filePath;
