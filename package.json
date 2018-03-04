@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -p ./tsconfig.json",
-    "start": "electron bin"
+    "start-debug": "electron --inspect=5858 ./bin",
+    "start": "electron ./bin"
   },
   "author": "SONIC3D",
   "license": "ISC",
