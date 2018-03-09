@@ -12,7 +12,7 @@
   "author": "SONIC3D",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^1.8.2",
+    "electron": "^1.8.3",
     "typescript": "^2.7.2"
   }
 }
