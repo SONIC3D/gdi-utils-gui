@@ -33,6 +33,7 @@ module appRenderer {
             this._initEvtBindingBtnBrowseGdiDst();
             this.m_btnStartJobSingle = document.getElementById("btn-startJob-single") as HTMLButtonElement;
             this._initEvtBindingBtnStartJobSingle();
+            this._initEvtForIpc_CompleteJobSingle();
             this.m_btnLogClear = document.getElementById("btn-logClear") as HTMLButtonElement;
             this._initEvtBindingBtnLogClear();
             this.m_txtareaLogMain = document.getElementById("txtarea-logMain") as HTMLTextAreaElement;
@@ -85,9 +86,28 @@ module appRenderer {
                 btnTarget.addEventListener("click", (evt: Event) => {
                     console.log(`Button ${btnTarget.id} event ${evt.type} occurred.`);
 
+                    btnTarget.disabled = true;
+
                     // DONE: Post path data to main process and start the conversion job.
                     if (ipcRenderer) {
                         ipcRenderer.send('startJob-single', this.getInputBoxGdiSrcFilePath(), this.getInputBoxGdiDstDir());
+                    }
+                });
+            }
+        }
+
+        private _initEvtForIpc_CompleteJobSingle(): void {
+            let ipcRenderer = IndexRenderer.s_ipcRenderer;
+
+            if (ipcRenderer) {
+                ipcRenderer.on('completeJob-single', (evt: electron.Event, ...argv: any[]) => {
+                    let argc: number = argv.length;
+                    console.log(`ipcRender on event log-addLine-Error, argc: ${argv.length}, args: ${argv}`);
+
+                    let btnTarget = this.m_btnStartJobSingle;
+
+                    if (btnTarget) {
+                        btnTarget.disabled = false;
                     }
                 });
             }

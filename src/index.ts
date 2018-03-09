@@ -11,10 +11,13 @@
 import * as electron from "electron";
 import * as path from "path";
 import * as url from "url";
+import {GDITrack, GDIDisc, GeneralGDIWriter, IGDILogger, Debug} from "./gdi-parser";
 
 module app {
     // Program Entry Class
-    export class MainEntry {
+    import WebContents = Electron.WebContents;
+
+    export class MainEntry implements IGDILogger {
         public static CONFIG__PATH__ENTRY_PAGE_FILE: string = 'res/index.html';
 
         protected static s_app = electron.app;
@@ -29,7 +32,16 @@ module app {
         // be closed automatically when the JavaScript object is garbage collected.
         protected m_mainWindow: Electron.BrowserWindow;
 
+        protected m_loggerRenderProcess: WebContents;
+        protected m_mainUIRenderProcess: WebContents;
+
+        protected m_srcFilePath: string;
+        protected m_dstDir: string;
+
         constructor() {
+            this.m_srcFilePath = "";
+            this.m_dstDir = "";
+
             this._initEventsForAppWindow();
             this._initEventsForIpc();
 
@@ -72,13 +84,36 @@ module app {
                     let argc: number = argv.length;
                     console.log(`ipcMain on event startJob-single, argc: ${argv.length}, args: ${argv}`);
 
+                    this.m_loggerRenderProcess = evt.sender;
+                    this.m_mainUIRenderProcess = evt.sender;
+
                     if ((argc != 2) || (argv[0].trim().length == 0) || (argv[1].trim().length == 0)) {
                         // Parameters error.
-                        evt.sender.send('log-addLine-Error', 'Gdi image source file path and output directory are both required.');
+                        this.logToRemoteLogger('Gdi image source file path and output directory are both required.');
+                        this.completeJob_Single();
                     } else {
-                        let srcFilePath: string = argv[0];
-                        let dstDir: string = argv[1];
+                        this.m_srcFilePath = argv[0];
+                        this.m_dstDir = argv[1];
+
                         // TODO: Integrate gdi-utils lib to invoke its conversion API here with the user provided file paths.
+                        Debug.setLogger(this);
+                        GDIDisc.createFromFile(this.m_srcFilePath, (gdiLayout: GDIDisc) => {
+                            this.logToRemoteLogger("GDI file parsing finished.");
+
+                            gdiLayout.printInfo();
+                            // gdiLayout.printIpBinInfo();
+                            if (gdiLayout.isIpBinLoaded) {
+                                let gdiWriter = GeneralGDIWriter.create(gdiLayout, this.m_dstDir, this);
+                                if (gdiWriter) {
+                                    gdiWriter.exec();
+                                }
+                            }
+                            gdiLayout.unload();
+                            this.completeJob_Single();
+
+                            this.m_loggerRenderProcess = undefined;
+                            this.m_mainUIRenderProcess = undefined;
+                        }, this);
                     }
                 });
             }
@@ -105,6 +140,35 @@ module app {
                 // when you should delete the corresponding element.
                 this.m_mainWindow = null;
             });
+        }
+
+        protected completeJob_Single(): void {
+            if (this.m_mainUIRenderProcess) {
+                this.m_mainUIRenderProcess.send('completeJob-single');
+            }
+        }
+
+        protected logToRemoteLogger(logMsg: string): void {
+            if (this.m_loggerRenderProcess != undefined) {
+                this.m_loggerRenderProcess.send('log-addLine-Error', logMsg);
+            }
+        }
+
+        // Implement IGDILogger
+        public error(message?: any, ...optionalParams: any[]): void {
+            this.logToRemoteLogger(message);
+        }
+
+        public warn(message?: any, ...optionalParams: any[]): void {
+            this.logToRemoteLogger(message);
+        }
+
+        public log(message?: any, ...optionalParams: any[]): void {
+            this.logToRemoteLogger(message);
+        }
+
+        public info(message?: any, ...optionalParams: any[]): void {
+            this.logToRemoteLogger(message);
         }
     }
 }
