@@ -32,13 +32,22 @@ module app {
         // be closed automatically when the JavaScript object is garbage collected.
         protected m_mainWindow: Electron.BrowserWindow;
 
+        // Renderer process for log and primary feature related command
         protected m_loggerRenderProcess: WebContents;
         protected m_mainUIRenderProcess: WebContents;
 
+        // Frame update logic handle
+        protected m_hFrameUpdate: NodeJS.Timer;
+
+        // Conversion job related variables
+        protected m_isJobRequestComing: boolean;
+        protected m_isJobStarted: boolean;
         protected m_srcFilePath: string;
         protected m_dstDir: string;
 
         constructor() {
+            this.m_isJobRequestComing = false;
+            this.m_isJobStarted = false;
             this.m_srcFilePath = "";
             this.m_dstDir = "";
 
@@ -56,7 +65,13 @@ module app {
             // initialization and is ready to create browser windows.
             // Some APIs can only be used after this event occurs.
             electronApp.on('ready', (launchInfo: any) => {
+                // Create main window.
                 this.createWindow();
+
+                // Add frame update logic to process conversion job outside the process message processing event.
+                this.m_hFrameUpdate = setInterval((...args: any[]) => {
+                    this.update();
+                }, 30);
             });
 
             // Quit when all windows are closed.
@@ -75,6 +90,11 @@ module app {
                     this.createWindow();
                 }
             });
+
+            electronApp.on('quit', (event: Event, exitCode: number) => {
+                console.log('Quiting application...');
+                clearInterval(this.m_hFrameUpdate);
+            });
         }
 
         private _initEventsForIpc(): void {
@@ -92,28 +112,10 @@ module app {
                         this.logToRemoteLogger('Gdi image source file path and output directory are both required.');
                         this.completeJob_Single();
                     } else {
+                        // Save file path and announce the job start request.(The update method would handle the actual works.)
                         this.m_srcFilePath = argv[0];
                         this.m_dstDir = argv[1];
-
-                        // TODO: Integrate gdi-utils lib to invoke its conversion API here with the user provided file paths.
-                        Debug.setLogger(this);
-                        GDIDisc.createFromFile(this.m_srcFilePath, (gdiLayout: GDIDisc) => {
-                            this.logToRemoteLogger("GDI file parsing finished.");
-
-                            gdiLayout.printInfo();
-                            // gdiLayout.printIpBinInfo();
-                            if (gdiLayout.isIpBinLoaded) {
-                                let gdiWriter = GeneralGDIWriter.create(gdiLayout, this.m_dstDir, this);
-                                if (gdiWriter) {
-                                    gdiWriter.exec();
-                                }
-                            }
-                            gdiLayout.unload();
-                            this.completeJob_Single();
-
-                            this.m_loggerRenderProcess = undefined;
-                            this.m_mainUIRenderProcess = undefined;
-                        }, this);
+                        this.m_isJobRequestComing = true;
                     }
                 });
             }
@@ -169,6 +171,39 @@ module app {
 
         public info(message?: any, ...optionalParams: any[]): void {
             this.logToRemoteLogger(message);
+        }
+
+        protected update(): void {
+            // console.log("update");
+            if (this.m_isJobStarted) {
+                return;
+            }
+
+            if (this.m_isJobRequestComing) {
+                this.m_isJobRequestComing = false;
+                this.m_isJobStarted = true;
+
+                // DONE: Integrate gdi-utils lib to invoke its conversion API here with the user provided file paths.
+                Debug.setLogger(this);
+                GDIDisc.createFromFile(this.m_srcFilePath, (gdiLayout: GDIDisc) => {
+                    this.logToRemoteLogger("GDI file parsing finished.");
+
+                    gdiLayout.printInfo();
+                    // gdiLayout.printIpBinInfo();
+                    if (gdiLayout.isIpBinLoaded) {
+                        let gdiWriter = GeneralGDIWriter.create(gdiLayout, this.m_dstDir, this);
+                        if (gdiWriter) {
+                            gdiWriter.exec();
+                        }
+                    }
+                    gdiLayout.unload();
+                    this.completeJob_Single();
+
+                    this.m_loggerRenderProcess = undefined;
+                    this.m_mainUIRenderProcess = undefined;
+                    this.m_isJobStarted = false;
+                }, this);
+            }
         }
     }
 }
