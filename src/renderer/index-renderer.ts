@@ -16,6 +16,7 @@ module appRenderer {
         protected static s_remote = electron.remote;
         protected static s_dialog = IndexRenderer.s_remote.dialog;
 
+        protected m_lblVersionCode: HTMLLabelElement;
         protected m_btnBrowseGdiSrc: HTMLButtonElement;
         protected m_txtGdiSrcFilePath: HTMLInputElement;
         protected m_btnBrowseGdiDstDir: HTMLButtonElement;
@@ -25,6 +26,9 @@ module appRenderer {
         protected m_btnLogClear: HTMLButtonElement;
 
         constructor() {
+            this.m_lblVersionCode = document.getElementById("txt-ver") as HTMLLabelElement;
+            this.m_lblVersionCode.innerHTML = "Version 1.0 build:20180309";
+
             this.m_btnBrowseGdiSrc = document.getElementById("btn-browseGdiSrc") as HTMLButtonElement;
             this.m_txtGdiSrcFilePath = document.getElementById("txt-gdiSrcFilePath") as HTMLInputElement;
             this._initEvtBindingBtnBrowseGdiSrc();
